@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"github.com/jamistoso/pokedexcli/internal/pokeapi"
 )
 
 type cliCommand struct {
@@ -99,6 +101,8 @@ func commandMapb(conf *config) error {
 		fmt.Println(outStr)
 		return nil
 	}
+	location_areas := pokeapi.GetLocationAreas(conf.previous)
+	location_areas += 1
 	conf.index -= 20
 	return nil
 }
