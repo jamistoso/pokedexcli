@@ -59,7 +59,7 @@ type LocationArea struct {
 	} `json:"pokemon_encounters"`
 }
 
-func getLocationAreas(url string) ([]LocationArea, error) {
+func GetLocationAreas(url string) ([]LocationArea, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, err

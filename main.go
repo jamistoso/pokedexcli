@@ -101,8 +101,10 @@ func commandMapb(conf *config) error {
 		fmt.Println(outStr)
 		return nil
 	}
-	location_areas := pokeapi.GetLocationAreas(conf.previous)
+	var location_areas []pokeapi.LocationArea 
+	location_areas, err := pokeapi.GetLocationAreas(conf.previous)
 	location_areas += 1
+	err -= 1
 	conf.index -= 20
 	return nil
 }
