@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/jamistoso/pokedexcli/internal/pokeapi"
 )
@@ -16,6 +17,7 @@ type cliCommand struct {
 
 type config struct {
 	index    int
+	offset	 int
 	next     string
 	previous string
 }
@@ -27,9 +29,11 @@ func main() {
 	commands := cliCommands()
 	pokeConfig := config{
 		index:    0,
+		offset:	  20,
 		next:     "",
 		previous: "",
 	}
+	updateConf(&pokeConfig)
 	for {
 		fmt.Print("Pokedex > ")
 		if !scanner.Scan() {
@@ -45,7 +49,11 @@ func main() {
 				fmt.Println("unknown command")
 				continue
 			}
-			function.callback(&pokeConfig)
+			err := function.callback(&pokeConfig)
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
 		}
 
 	}
@@ -92,6 +100,14 @@ func commandExit(conf *config) error {
 }
 
 func commandMap(conf *config) error {
+	var location_areas []pokeapi.LocationAreaURL
+	location_areas, err := pokeapi.GetLocationAreaURLs(conf.next)
+	if err != nil {
+		return fmt.Errorf("location error retrieval failed: %s", err)
+	}
+	listAreaURLNames(location_areas)
+	conf.index += conf.offset
+	updateConf(conf)
 	return nil
 }
 
@@ -101,10 +117,28 @@ func commandMapb(conf *config) error {
 		fmt.Println(outStr)
 		return nil
 	}
-	var location_areas []pokeapi.LocationArea 
-	location_areas, err := pokeapi.GetLocationAreas(conf.previous)
-	location_areas += 1
-	err -= 1
-	conf.index -= 20
+	var location_areas []pokeapi.LocationAreaURL
+	location_areas, err := pokeapi.GetLocationAreaURLs(conf.previous)
+	if err != nil {
+		return fmt.Errorf("location error retrieval failed: %s", err)
+	}
+	listAreaURLNames(location_areas)
+	conf.index -= conf.offset
+	updateConf(conf)
 	return nil
+}
+
+func listAreaURLNames(location_areas []pokeapi.LocationArea) {
+	for _, area := range location_areas {
+		fmt.Println(area.Name)
+	}
+}
+
+func updateConf(conf *config) {
+	conf.next = locationAreaURL + strconv.Itoa(conf.index)
+	if conf.index != 0 {
+		conf.previous = locationAreaURL + strconv.Itoa(conf.index - conf.offset)
+	} else {
+		conf.previous = "N/A: 0 index"
+	}
 }

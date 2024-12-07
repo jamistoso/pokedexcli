@@ -59,7 +59,12 @@ type LocationArea struct {
 	} `json:"pokemon_encounters"`
 }
 
-func GetLocationAreas(url string) ([]LocationArea, error) {
+type LocationAreaURL struct {
+	Name		string
+	LocationURL	string	
+}
+
+func GetLocationAreaURLs(url string) ([]LocationAreaURL, error) {
 	res, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -71,8 +76,8 @@ func GetLocationAreas(url string) ([]LocationArea, error) {
 		return nil, err
 	}
 
-	var location_areas []LocationArea
-	if err = json.Unmarshal(data, &location_areas); err != nil {
+	var location_areas []LocationAreaURL
+	if err = json.Unmarshal([]byte(data), &location_areas); err != nil {
 		return nil, err
 	}
 
