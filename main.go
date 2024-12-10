@@ -95,40 +95,42 @@ func commandHelp(conf *config) error {
 }
 
 func commandExit(conf *config) error {
+	outStr := "Closing the Pokedex... Goodbye!\n"
+	fmt.Println(outStr)
 	os.Exit(0)
 	return nil
 }
 
 func commandMap(conf *config) error {
-	var location_areas []pokeapi.LocationAreaURL
+	var location_areas []pokeapi.Result
 	location_areas, err := pokeapi.GetLocationAreaURLs(conf.next)
 	if err != nil {
 		return fmt.Errorf("location error retrieval failed: %s", err)
 	}
-	listAreaURLNames(location_areas)
+	listLocationAreaURLNames(location_areas)
 	conf.index += conf.offset
 	updateConf(conf)
 	return nil
 }
 
 func commandMapb(conf *config) error {
-	if conf.index == 0 {
-		outStr := "No previous location areas found"
+	if conf.index <= conf.offset {
+		outStr := "You're on the first page"
 		fmt.Println(outStr)
 		return nil
 	}
-	var location_areas []pokeapi.LocationAreaURL
+	var location_areas []pokeapi.Result
 	location_areas, err := pokeapi.GetLocationAreaURLs(conf.previous)
 	if err != nil {
 		return fmt.Errorf("location error retrieval failed: %s", err)
 	}
-	listAreaURLNames(location_areas)
+	listLocationAreaURLNames(location_areas)
 	conf.index -= conf.offset
 	updateConf(conf)
 	return nil
 }
 
-func listAreaURLNames(location_areas []pokeapi.LocationArea) {
+func listLocationAreaURLNames(location_areas []pokeapi.Result) {
 	for _, area := range location_areas {
 		fmt.Println(area.Name)
 	}
@@ -136,8 +138,8 @@ func listAreaURLNames(location_areas []pokeapi.LocationArea) {
 
 func updateConf(conf *config) {
 	conf.next = locationAreaURL + strconv.Itoa(conf.index)
-	if conf.index != 0 {
-		conf.previous = locationAreaURL + strconv.Itoa(conf.index - conf.offset)
+	if conf.index >= conf.offset {
+		conf.previous = locationAreaURL + strconv.Itoa(conf.index - (conf.offset * 2))
 	} else {
 		conf.previous = "N/A: 0 index"
 	}

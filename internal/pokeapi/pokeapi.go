@@ -59,27 +59,55 @@ type LocationArea struct {
 	} `json:"pokemon_encounters"`
 }
 
-type LocationAreaURL struct {
-	Name		string
-	LocationURL	string	
+type ResourceList struct {
+	Count    int    `json:"count"`
+	Next     string `json:"next"`
+	Previous any    `json:"previous"`
+	Results  []struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"results"`
 }
 
-func GetLocationAreaURLs(url string) ([]LocationAreaURL, error) {
+type Result struct {
+	Name		string
+	URL			string	
+}
+
+func getResourceList(url string) (ResourceList, error) {
 	res, err := http.Get(url)
 	if err != nil {
-		return nil, err
+		return ResourceList{}, err
 	}
 	defer res.Body.Close()
 
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
+		return ResourceList{}, err
+	}
+
+	var resourceList ResourceList
+	if err = json.Unmarshal([]byte(data), &resourceList); err != nil {
+		return ResourceList{}, err
+	}
+
+	return resourceList, nil
+}
+
+func GetLocationAreaURLs(url string)  ([]Result, error) {
+	resourceList, err := getResourceList(url)
+	if err != nil {
 		return nil, err
 	}
 
-	var location_areas []LocationAreaURL
-	if err = json.Unmarshal([]byte(data), &location_areas); err != nil {
-		return nil, err
+	var location_area_urls []Result
+	for _, result := range resourceList.Results {
+		item := Result{
+			Name: result.Name,
+			URL: result.URL,
+		}
+		location_area_urls = append(location_area_urls, item)
 	}
 
-	return location_areas, nil
+	return location_area_urls, nil
 }
