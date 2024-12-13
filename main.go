@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/jamistoso/pokedexcli/internal/pokeapi"
+	"github.com/jamistoso/pokedexcli/internal/pokecache"
 )
 
 type cliCommand struct {
@@ -102,6 +103,7 @@ func commandExit(conf *config) error {
 }
 
 func commandMap(conf *config) error {
+
 	var location_areas []pokeapi.Result
 	location_areas, err := pokeapi.GetLocationAreaURLs(conf.next)
 	if err != nil {
