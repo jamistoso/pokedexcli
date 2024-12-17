@@ -186,6 +186,7 @@ func commandMap(conf *config) error {
 		listResultNames(location_areas)
 	} else {
 		data, err := pokeapi.PokeapiGet(conf.next)
+		conf.cache.Add(conf.next, data)
 		if err != nil {
 			return fmt.Errorf("pokeapi get failed: %s", err)
 		}
@@ -216,6 +217,7 @@ func commandMapb(conf *config) error {
 		listResultNames(location_areas)
 	} else {
 		data, err := pokeapi.PokeapiGet(conf.previous)
+		conf.cache.Add(conf.previous, data)
 		if err != nil {
 			return fmt.Errorf("pokeapi get failed: %s", err)
 		}
