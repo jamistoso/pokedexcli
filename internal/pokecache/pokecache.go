@@ -4,6 +4,7 @@ import (
 	"time"
 	"sync"
 )
+
 type Cache struct {
 	cacheMux		*sync.Mutex
 	cacheMap		map[string]cacheEntry
@@ -15,10 +16,14 @@ type cacheEntry struct {
 	val 		[]byte
 }
 
-func (c Cache) NewCache(duration time.Duration) {
-	c.cacheMux = &sync.Mutex{}
-	c.interval = duration
-	go c.reapLoop()
+func NewCache(duration time.Duration) (Cache) {
+	cache := Cache {
+		cacheMux:	&sync.Mutex{},
+		cacheMap:	map[string]cacheEntry{},
+		interval:	duration,
+	}
+	go cache.reapLoop()
+	return cache
 }
 
 func (c Cache) Add(key string, val []byte) {
