@@ -455,6 +455,11 @@ func cliCommands() map[string]cliCommand {
 			description: "Inspect a pokemon you have caught",
 			callback:    commandInspect,
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "List all pokemon in your pokedex",
+			callback:    commandPokedex,	
+		},
 	}
 }
 
@@ -600,6 +605,14 @@ func commandInspect(conf *config, arg1 string) error {
 		fmt.Println("you have not caught that pokemon")
 	} else {
 		printPokemonStats(pokemon)	
+	}
+	return nil
+}
+
+func commandPokedex(conf *config, arg1 string) error {
+	fmt.Println("Your Pokedex:")
+	for pokemonName := range conf.pokedex {
+		fmt.Println(" - " + pokemonName)
 	}
 	return nil
 }
