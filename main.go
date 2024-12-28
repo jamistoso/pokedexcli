@@ -450,6 +450,11 @@ func cliCommands() map[string]cliCommand {
 			description: "Attempt to catch a pokemon",
 			callback:    commandCatch,
 		},
+		"inspect": {
+			name:        "inspect",
+			description: "Inspect a pokemon you have caught",
+			callback:    commandInspect,
+		},
 	}
 }
 
@@ -589,6 +594,16 @@ func commandCatch(conf *config, arg1 string) error {
 	return err
 }
 
+func commandInspect(conf *config, arg1 string) error {
+	pokemon, ok := conf.pokedex[arg1]
+	if !ok {
+		fmt.Println("you have not caught that pokemon")
+	} else {
+		printPokemonStats(pokemon)	
+	}
+	return nil
+}
+
 func listResultNames(location_areas []result) {
 	for _, area := range location_areas {
 		fmt.Println(area.Name)
@@ -651,4 +666,27 @@ func getPokemon(data []byte) (Pokemon, error) {
 		return Pokemon{}, err
 	}
 	return pokemon, nil
+}
+
+func printPokemonStats(pokemon Pokemon) {
+	pokeStats := map[string]int{}
+	for _, stat := range pokemon.Stats {
+		pokeStats[stat.Stat.Name] = stat.BaseStat
+	}
+	fmt.Println(
+		"Name: " + pokemon.Name,
+		"\nHeight: " + strconv.Itoa(pokemon.Height),
+		"\nWeight: " + strconv.Itoa(pokemon.Weight),
+		"\nStats: ",
+		"\n	-hp: " + strconv.Itoa(pokeStats["hp"]),
+		"\n	-attack: " + strconv.Itoa(pokeStats["attack"]),
+		"\n	-defense: " + strconv.Itoa(pokeStats["defense"]),
+		"\n	-special-attack: " + strconv.Itoa(pokeStats["special-attack"]),
+		"\n	-special-defense: " + strconv.Itoa(pokeStats["special-defense"]),
+		"\n	-speed: " + strconv.Itoa(pokeStats["speed"]),
+		"\nTypes:",
+	)
+	for _, pokeType := range pokemon.Types {
+		fmt.Println("	- " + pokeType.Type.Name)
+	}
 }
