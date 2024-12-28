@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"strconv"
 	"strings"
@@ -366,6 +367,7 @@ type config struct {
 	next    	string
 	previous 	string
 	cache	 	pokecache.Cache
+	pokedex		map[string]Pokemon
 }
 
 const locationAreaListURL = "https://pokeapi.co/api/v2/location-area/?offset="
@@ -382,6 +384,7 @@ func main() {
 		next:     	"",
 		previous: 	"",
 		cache:		cache,
+		pokedex:	map[string]Pokemon{},
 	}
 	updateConf(&pokeConfig)
 	for {
@@ -477,10 +480,10 @@ func commandMap(conf *config, arg1 string) error {
 		listResultNames(location_areas)
 	} else {
 		data, err := pokeapi.PokeapiGet(conf.next)
-		conf.cache.Add(conf.next, data)
 		if err != nil {
 			return fmt.Errorf("pokeapi get failed: %s", err)
 		}
+		conf.cache.Add(conf.next, data)
 		location_areas, err := getResults(data)
 		if err != nil {
 			return fmt.Errorf("location area retrieval failed: %s", err)
@@ -508,10 +511,10 @@ func commandMapb(conf *config, arg1 string) error {
 		listResultNames(location_areas)
 	} else {
 		data, err := pokeapi.PokeapiGet(conf.previous)
-		conf.cache.Add(conf.previous, data)
 		if err != nil {
 			return fmt.Errorf("pokeapi get failed: %s", err)
 		}
+		conf.cache.Add(conf.previous, data)
 		location_areas, err := getResults(data)
 		if err != nil {
 			return fmt.Errorf("location area retrieval failed: %s", err)
@@ -534,10 +537,10 @@ func commandExplore(conf *config, arg1 string) error {
 		listPokemonInLocationArea(location_area)
 	} else {
 		data, err := pokeapi.PokeapiGet(url)
-		conf.cache.Add(conf.next, data)
 		if err != nil {
 			return fmt.Errorf("pokeapi get failed: %s", err)
 		}
+		conf.cache.Add(conf.next, data)
 		location_area, err := getLocationArea(data)
 		if err != nil {
 			return fmt.Errorf("location area retrieval failed: %s", err)
@@ -551,30 +554,39 @@ func commandExplore(conf *config, arg1 string) error {
 }
 
 func commandCatch(conf *config, arg1 string) error {
-	url := locationAreaURL + arg1
-	val, exists := conf.cache.Get(url)
-	if exists {
-		location_area, err := getLocationArea(val)
-		if err != nil {
-			return fmt.Errorf("result list retrieval failed: %s", err)
-		}
-		listPokemonInLocationArea(location_area)
-	} else {
-		data, err := pokeapi.PokeapiGet(url)
-		conf.cache.Add(conf.next, data)
-		if err != nil {
-			return fmt.Errorf("pokeapi get failed: %s", err)
-		}
-		location_area, err := getLocationArea(data)
-		if err != nil {
-			return fmt.Errorf("location area retrieval failed: %s", err)
-		}
-		listPokemonInLocationArea(location_area)
+	url := pokemonURL + arg1
+	data, err := pokeapi.PokeapiGet(url)
+	if err != nil {
+		return fmt.Errorf("pokeapi get failed: %s", err)
 	}
-	
-	conf.index += conf.offset
-	updateConf(conf)
-	return nil
+	pokemon, err := getPokemon(data)
+	if err != nil {
+		return fmt.Errorf("pokemon retrieval failed")
+	}
+
+	exp := pokemon.BaseExperience
+
+	var randInt int
+	if exp > 350 {
+		randInt = rand.Intn(700)
+	} else if exp > 150 {
+		randInt = rand.Intn(400)
+	} else if exp > 50 {
+		randInt = rand.Intn(200)
+	} else {
+		randInt = rand.Intn(100)
+
+	}
+
+	fmt.Println("Throwing a Pokeball at " + arg1 + "...")
+	if randInt > exp {
+		fmt.Println(arg1 + " was caught!")
+		conf.pokedex[arg1] = pokemon
+	} else {
+		fmt.Println(arg1 + " escaped!")
+	}
+
+	return err
 }
 
 func listResultNames(location_areas []result) {
@@ -631,4 +643,12 @@ func getLocationArea(data []byte) (locationArea, error) {
 		return locationArea{}, err
 	}
 	return locArea, nil
+}
+
+func getPokemon(data []byte) (Pokemon, error) {
+	var pokemon Pokemon
+	if err := json.Unmarshal([]byte(data), &pokemon); err != nil {
+		return Pokemon{}, err
+	}
+	return pokemon, nil
 }
